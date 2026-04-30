@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   root: "public",
-  base: "./",
+  base: "/Quran-Generator/",
   build: {
     outDir: "../dist",
     emptyOutDir: true,
