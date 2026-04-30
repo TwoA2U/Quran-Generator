@@ -371,7 +371,9 @@ async function generate() {
     let fontFamilyName = FONT_LABELS[opts.fontName] || "Arabic Font";
 
     try {
-      const fontRes = await fetch(`./fonts/${opts.fontName}.woff2`);
+      const fontRes = await fetch(
+        `${import.meta.env.BASE_URL}fonts/${opts.fontName}.woff2`,
+      );
       if (!fontRes.ok) {
         throw new Error(`HTTP ${fontRes.status} - file font tidak ditemukan`);
       }
