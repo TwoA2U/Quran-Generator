@@ -12,6 +12,7 @@ const optFilename = document.getElementById('opt-filename')
 const apiKeyInput = document.getElementById('api-key')
 const editionArabicInput = document.getElementById('edition-arabic')
 const editionLatinInput = document.getElementById('edition-latin')
+const editionTranslationInput = document.getElementById('edition-translation')
 const progressCard = document.getElementById('section-progress')
 const progressBar = document.getElementById('progress-bar')
 const progressPct = document.getElementById('progress-pct')
@@ -52,17 +53,23 @@ function buildApiUrl(path, apiKey) {
   return url.toString()
 }
 
-function renderEditionOptions(selectEl, editions, defaultIdentifier) {
+function renderEditionOptions(selectEl, editions, defaultIdentifier, emptyLabel = '') {
   selectEl.innerHTML = ''
+  if (emptyLabel) {
+    const option = document.createElement('option')
+    option.value = ''
+    option.textContent = emptyLabel
+    selectEl.appendChild(option)
+  }
   editions.forEach(edition => {
     const option = document.createElement('option')
     option.value = edition.identifier
-    option.textContent = `${edition.identifier} - ${edition.englishName || edition.name}`
+    option.textContent = `${edition.identifier} - ${edition.name}${edition.englishName && edition.englishName !== 'Unknown' ? ` (${edition.englishName})` : ''}`
     selectEl.appendChild(option)
   })
   selectEl.value = editions.some(edition => edition.identifier === defaultIdentifier)
     ? defaultIdentifier
-    : editions[0]?.identifier || ''
+    : emptyLabel ? '' : editions[0]?.identifier || ''
 }
 
 async function loadEditionOptions() {
@@ -75,12 +82,18 @@ async function loadEditionOptions() {
       edition.type === 'transliteration' ||
       edition.identifier.toLowerCase().includes('transliteration')
     )
+    const translationEditions = editions
+      .filter(edition => edition.type === 'translation')
+      .sort((a, b) => `${a.language}.${a.name}`.localeCompare(`${b.language}.${b.name}`))
 
     if (arabicEditions.length) {
       renderEditionOptions(editionArabicInput, arabicEditions, 'quran-uthmani')
     }
     if (latinEditions.length) {
       renderEditionOptions(editionLatinInput, latinEditions, 'en.transliteration')
+    }
+    if (translationEditions.length) {
+      renderEditionOptions(editionTranslationInput, translationEditions, 'id.indonesian', 'Tanpa terjemahan')
     }
   } catch (err) {
     console.warn('Daftar edisi gagal dimuat, pakai opsi bawaan:', err)
@@ -99,25 +112,32 @@ async function fetchJson(url) {
 }
 
 async function fetchSurahFromApi(num, opts) {
-  const editions = `${encodeURIComponent(opts.editionArabic)},${encodeURIComponent(opts.editionLatin)}`
+  const editionIds = [opts.editionArabic, opts.editionLatin, opts.editionTranslation].filter(Boolean)
+  const editions = editionIds.map(edition => encodeURIComponent(edition)).join(',')
   const data = await fetchJson(buildApiUrl(`surah/${num}/editions/${editions}`, opts.apiKey))
   const editionList = Array.isArray(data) ? data : []
   const arabicEdition = editionList.find(item => item.edition?.identifier === opts.editionArabic) || editionList[0]
   const latinEdition = editionList.find(item => item.edition?.identifier === opts.editionLatin) || editionList[1]
+  const translationEdition = opts.editionTranslation
+    ? editionList.find(item => item.edition?.identifier === opts.editionTranslation)
+    : null
 
   if (!arabicEdition?.ayahs?.length) {
     throw new Error(`Data Arab surah ${num} kosong. Cek edisi "${opts.editionArabic}".`)
   }
 
   const latinByAyah = new Map((latinEdition?.ayahs || []).map(ayah => [ayah.numberInSurah, ayah]))
+  const translationByAyah = new Map((translationEdition?.ayahs || []).map(ayah => [ayah.numberInSurah, ayah]))
 
   return arabicEdition.ayahs.map(ayah => {
     const latin = latinByAyah.get(ayah.numberInSurah)
+    const translation = translationByAyah.get(ayah.numberInSurah)
     return {
       ayah_number: ayah.numberInSurah,
       page_number: ayah.page,
       script: ayah.text,
       latin: stripHtml(latin?.text || ''),
+      translation: stripHtml(translation?.text || ''),
     }
   })
 }
@@ -147,6 +167,7 @@ function buildEpubCss(fontBase64) {
     .arabic-text { font-family: "Scheherazade New", "Amiri", "KFGQPC Uthmanic Script Hafs", "Traditional Arabic", serif;
       font-size: 1.75em; line-height: 2.1; direction: rtl; text-align: right; display: block; margin-bottom: 0.35em; }
     .latin-line { font-size: 0.85em; line-height: 1.55; color: #222; }
+    .translation-line { font-size: 0.85em; line-height: 1.55; color: #222; margin-top: 0.25em; }
     .ayah-num-inline { font-weight: bold; margin-right: 0.3em; }
     .page-ref { font-size: 0.82em; color: #333; margin-left: 0.4em; }
   `
@@ -159,6 +180,9 @@ function buildSurahHtml(surahMeta, verses, opts) {
     const pageHtml = opts.showPage && v.page_number
       ? `<span class="page-ref">(Hal. ${v.page_number})</span>`
       : ''
+    const translationHtml = opts.editionTranslation && v.translation
+      ? `<p class="translation-line">${escapeHtml(v.translation)}</p>`
+      : ''
 
     return `
       <div class="ayah-block">
@@ -166,6 +190,7 @@ function buildSurahHtml(surahMeta, verses, opts) {
         <p class="latin-line">
           <span class="ayah-num-inline">${v.ayah_number}.</span>${escapeHtml(v.latin)} ${pageHtml}
         </p>
+        ${translationHtml}
       </div>`
   }).join('\n')
 
@@ -198,6 +223,7 @@ async function generate() {
     apiKey: apiKeyInput.value.trim(),
     editionArabic: editionArabicInput.value.trim() || 'quran-uthmani',
     editionLatin: editionLatinInput.value.trim() || 'en.transliteration',
+    editionTranslation: editionTranslationInput.value.trim(),
   }
   const filename = (optFilename.value.trim() || 'AlQuran-Kindle') + '.epub'
   const sortedNums = allSurahs.map(s => s.surah_id).sort((a, b) => a - b)
@@ -257,7 +283,7 @@ async function generate() {
         title: 'Al-Quran Al-Karim - Latin Transliteration',
         author: 'AlQuran.cloud',
         publisher: 'AlQuran.cloud',
-        description: 'Al-Quran untuk Kindle dengan teks Arab, nomor ayat, nomor halaman mushaf, dan transliterasi latin.',
+        description: 'Al-Quran untuk Kindle dengan teks Arab, nomor ayat, nomor halaman mushaf, transliterasi latin, dan terjemahan opsional.',
         lang: 'id',
         tocTitle: 'Daftar Surah',
         css,
