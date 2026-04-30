@@ -6,6 +6,7 @@
 import epub from "epub-gen-memory/bundle";
 const btnGenerate = document.getElementById("btn-generate");
 const optPage = document.getElementById("opt-page");
+const optFont = document.getElementById("opt-font");
 const optFilename = document.getElementById("opt-filename");
 const apiKeyInput = document.getElementById("api-key");
 const editionArabicInput = document.getElementById("edition-arabic");
@@ -248,10 +249,10 @@ function mergeQuranEditions(arabicData, latinData, translationData) {
   return verseDataMap;
 }
 
-function buildEpubCss(fontBase64) {
+function buildEpubCss(fontBase64, fontFamilyName = "Arabic Font") {
   const fontFace = fontBase64
     ? `@font-face {
-    font-family: "Scheherazade New";
+    font-family: "${fontFamilyName}";
     font-weight: 400;
     font-style: normal;
     src: url("data:font/woff2;base64,${fontBase64}") format("woff2");
@@ -264,16 +265,16 @@ function buildEpubCss(fontBase64) {
     .surah-header { text-align: center; margin-bottom: 1.2em; padding: 0.6em 0;
       border-top: 1px solid #000; border-bottom: 1px solid #000; }
     .surah-number { font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 0.3em; }
-    .surah-name-arabic { font-family: "Scheherazade New", "Amiri", "Traditional Arabic", serif;
+    .surah-name-arabic { font-family: "${fontFamilyName}", "Scheherazade New", "Traditional Arabic", serif;
       font-size: 2em; direction: rtl; display: block; margin: 0.2em 0; }
     .surah-name-latin { font-size: 1.05em; font-weight: bold; display: block; }
     .surah-meta { font-size: 0.8em; display: block; margin-top: 0.3em; }
-    .basmalah { font-family: "Scheherazade New", "Amiri", "Traditional Arabic", serif;
+    .basmalah { font-family: "${fontFamilyName}", "Scheherazade New", "Traditional Arabic", serif;
       font-size: 1.35em; line-height: 1.8; direction: rtl; text-align: center; margin: 1em 0; }
     .ayah-block { margin-bottom: 1.2em; padding-bottom: 0.8em; border-bottom: 1px solid #ccc; }
     .ayah-block:last-child { border-bottom: none; }
     .ayah-meta { font-size: 0.78em; line-height: 1; font-weight: bold; margin-bottom: 0.35em; }
-    .arabic-text { font-family: "Scheherazade New", "Amiri", "KFGQPC Uthmanic Script Hafs", "Traditional Arabic", serif;
+    .arabic-text { font-family: "${fontFamilyName}", "Scheherazade New", "Traditional Arabic", serif;
       font-size: 1.7em; line-height: 1.2; direction: rtl; text-align: right; display: block; margin-bottom: 0.35em; }
     .latin-line { font-size: 0.85em; line-height: 1.2; }
     .translation-line { font-size: 0.85em; line-height: 1.2; margin-top: 0.25em; }
@@ -343,6 +344,7 @@ async function generate() {
     editionArabic: editionArabicInput.value.trim() || "quran-uthmani",
     editionLatin: editionLatinInput.value.trim() || "en.transliteration",
     editionTranslation: editionTranslationInput.value.trim(),
+    fontName: optFont.value,
   };
   const filename = (optFilename.value.trim() || "AlQuran-Kindle") + ".epub";
   const sortedNums = Array.from({ length: 114 }, (_, i) => i + 1);
@@ -351,12 +353,25 @@ async function generate() {
   try {
     const surahs = await loadSurahList();
 
-    setProgress(2, "Memuat font Arab...", "Scheherazade New");
+    setProgress(
+      2,
+      "Memuat font Arab...",
+      optFont.options[optFont.selectedIndex].text,
+    );
+
+    const FONT_LABELS = {
+      "scheherazade-new-arabic-400-normal": "Scheherazade New",
+      "amiri-quran-400-normal": "Amiri Quran",
+      "kfgqpc-hafs-400-normal": "KFGQPC Hafs",
+      "kfgqpc-hafs-smart-400-normal": "KFGQPC Hafs Smart",
+      "noto-naskh-arabic-400-normal": "Noto Naskh Arabic",
+    };
+
     let fontBase64 = "";
+    let fontFamilyName = FONT_LABELS[opts.fontName] || "Arabic Font";
+
     try {
-      const fontRes = await fetch(
-        "./fonts/scheherazade-new-arabic-400-normal.woff2",
-      );
+      const fontRes = await fetch(`./fonts/${opts.fontName}.woff2`);
       if (!fontRes.ok) {
         throw new Error(`HTTP ${fontRes.status} - file font tidak ditemukan`);
       }
@@ -366,24 +381,31 @@ async function generate() {
           `File font terlalu kecil (${fontBuf.byteLength} bytes), kemungkinan corrupt`,
         );
       }
-      fontBase64 = btoa(String.fromCharCode(...new Uint8Array(fontBuf)));
+
+      // Fix bug spread operator untuk file besar
+      const bytes = new Uint8Array(fontBuf);
+      let binary = "";
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      fontBase64 = btoa(binary);
+
       setProgress(
         4,
-        "Font Arab berhasil dimuat ✓",
+        `Font ${fontFamilyName} berhasil dimuat ✓`,
         `${(fontBuf.byteLength / 1024).toFixed(0)} KB`,
       );
     } catch (e) {
       console.error("Font gagal dimuat:", e);
       setProgress(
         4,
-        "⚠️ Font Arab gagal dimuat — harakat mungkin tidak tampil di Kindle",
-        `${e.message}. Pastikan file ada di public/fonts/scheherazade-new-arabic-400-normal.woff2`,
+        `⚠️ Font ${fontFamilyName} gagal dimuat — harakat mungkin tidak tampil di Kindle`,
+        `${e.message}. Pastikan file ada di public/fonts/${opts.fontName}.woff2`,
       );
-      // Beri jeda supaya user sempat baca warning sebelum lanjut
       await new Promise((resolve) => setTimeout(resolve, 2500));
     }
 
-    const css = buildEpubCss(fontBase64);
+    const css = buildEpubCss(fontBase64, fontFamilyName);
 
     setProgress(5, "Memuat teks Arab...", opts.editionArabic);
     const arabicData = await fetchQuranEdition(opts.editionArabic, opts.apiKey);
