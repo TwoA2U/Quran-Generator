@@ -250,15 +250,13 @@ function mergeQuranEditions(arabicData, latinData, translationData) {
   return verseDataMap;
 }
 
-function buildEpubCss(fontBase64, fontFamilyName = "Arabic Font") {
-  const fontFace = fontBase64
-    ? `@font-face {
+function buildEpubCss(fontFile, fontFamilyName = "Arabic Font") {
+  const fontFace = `@font-face {
     font-family: "${fontFamilyName}";
     font-weight: 400;
     font-style: normal;
-    src: url("data:font/woff2;base64,${fontBase64}") format("woff2");
-  }`
-    : "";
+    src: url(${fontFile}) format("truetype");
+  }`;
 
   return `
     ${fontFace}
@@ -368,13 +366,13 @@ async function generate() {
       "noto-naskh-arabic-400-normal": "Noto Naskh Arabic",
     };
 
-    let fontBase64 = "";
+    // let fontBase64 = "";
+    let fontFile = `${opts.fontName}.ttf`;
+    let fontPath = `${import.meta.env.BASE_URL}fonts/${fontFile}`;
     let fontFamilyName = FONT_LABELS[opts.fontName] || "Arabic Font";
 
     try {
-      const fontRes = await fetch(
-        `${import.meta.env.BASE_URL}fonts/${opts.fontName}.woff2`,
-      );
+      const fontRes = await fetch(fontPath);
       if (!fontRes.ok) {
         throw new Error(`HTTP ${fontRes.status} - file font tidak ditemukan`);
       }
@@ -384,15 +382,6 @@ async function generate() {
           `File font terlalu kecil (${fontBuf.byteLength} bytes), kemungkinan corrupt`,
         );
       }
-
-      // Fix bug spread operator untuk file besar
-      const bytes = new Uint8Array(fontBuf);
-      let binary = "";
-      for (let i = 0; i < bytes.byteLength; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      fontBase64 = btoa(binary);
-
       setProgress(
         4,
         `Font ${fontFamilyName} berhasil dimuat ✓`,
@@ -408,7 +397,7 @@ async function generate() {
       await new Promise((resolve) => setTimeout(resolve, 2500));
     }
 
-    const css = buildEpubCss(fontBase64, fontFamilyName);
+    const css = buildEpubCss(fontFile, fontFamilyName);
 
     setProgress(5, "Memuat teks Arab...", opts.editionArabic);
     const arabicData = await fetchQuranEdition(opts.editionArabic, opts.apiKey);
@@ -472,10 +461,6 @@ async function generate() {
         publisher: "",
         cover:
           "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1275263838i/646462.jpg",
-        // customOpfMetadata: `
-        //     <dc:identifier>goodreads:646462</dc:identifier>
-        //     <dc:identifier>amazon:B0DTR624WB</dc:identifier>
-        //   `,
         description: `The Quran (English pronunciation: /kɔrˈɑːn/; Arabic: القرآن‎ al-qurʾān, IPA: [qurˈʔaːn], literally meaning "the recitation"), also transliterated Qur'an, Koran, Al-Coran, Coran, Kur'an, and Al-Qur'an, is the central religious text of Islam, which Muslims believe to be the verbatim word of God (Arabic: الله‎, Allah).
         The Quran is composed of verses (Ayat) that make up 114 chapters (suras) of unequal length which are classified either as Meccan (المكية) or Medinan (المدنية) depending upon the place and time of their claimed revelation. Muslims believe the Quran to be verbally revealed through the angel Jibrīl (Gabriel) from God to Muhammad gradually over a period of approximately 23 years beginning on 22 December 609 CE, when Muhammad was 40, and concluding in 632 CE, the year of his death.
         Muslims regard the Quran as the main miracle of Muhammad, the proof of his prophethood and the culmination of a series of divine messages that started with the messages revealed to Adam, regarded in Islam as the first prophet, and continued with Suhuf Ibrahim (Scrolls of Abraham), the Tawrat (Torah or Pentateuch) of Moses, the Zabur (Tehillim or Book of Psalms) of David, and the Injil (Gospel) of Jesus. The Quran assumes familiarity with major narratives recounted in Jewish and Christian scriptures, summarizing some, dwelling at length on others and in some cases presenting alternative accounts and interpretations of events. The Quran describes itself as a book of guidance, sometimes offering detailed accounts of specific historical events, and often emphasizing the moral significance of an event over its narrative sequence. `,
@@ -485,6 +470,12 @@ async function generate() {
         numberChaptersInTOC: false,
         prependChapterTitles: false,
         version: 3,
+        fonts: [
+          {
+            filename: `${opts.fontName}.ttf`,
+            url: fontPath,
+          },
+        ],
       },
       chapters,
     );

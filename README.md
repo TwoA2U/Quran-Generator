@@ -3,21 +3,8 @@
 Web app untuk generate EPUB Al-Quran langsung di browser.
 
 **Fitur:**
-- 114 Surah lengkap — terjemahan resmi Kementerian Agama RI
-- Pilih surah individual, semua, atau Juz 30
-- Opsi tafsir ringkas & nomor halaman Mushaf Madinah
-- Font Scheherazade New embedded — harakat tampil sempurna di Kindle
+- Bebagai Arabic Font — Bisa untuk Kindle/E-reader
 - Generate EPUB 100% di browser, tanpa server
-
-## Deploy ke GitHub Pages
-
-### 1. Fork / clone repo ini
-
-### 2. Enable GitHub Pages via Actions
-Masuk ke **Settings → Pages → Source → GitHub Actions**
-
-### 3. Push ke branch `main`
-GitHub Actions otomatis build dan deploy.
 
 ## Development lokal
 
@@ -25,8 +12,6 @@ GitHub Actions otomatis build dan deploy.
 npm install
 npm run dev
 ```
-
-Buka `http://localhost:5173`
 
 ## Build lokal
 
@@ -38,18 +23,32 @@ npm run build
 ## Struktur
 
 ```
-├── public/
-│   ├── index.html        # UI utama
-│   ├── style.css         # Styling
-│   ├── main.js           # Logic: load data + generate EPUB
-│   ├── fonts/            # Scheherazade New (woff2)
-│   └── data/
-│       ├── surah.json    # Metadata 114 surah
-│       └── verses/       # 1.json — 114.json (data ayat per surah)
+Quran-Generator/
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml    # GitHub Actions: build + deploy ke Pages
+│       └── deploy.yml
+├── .gitignore
+├── README.md
+├── index.html
+├── package-lock.json
 ├── package.json
+├── public/
+│   ├── data/
+│   │   └── surah.json
+│   └── fonts/
+│       ├── Amiri-1.003.zip
+│       ├── amiri-quran-400-normal.ttf
+│       ├── amiri-quran-400-normal.woff2
+│       ├── kfgqpc-hafs-400-normal.ttf
+│       ├── kfgqpc-hafs-400-normal.woff2
+│       ├── kfgqpc-hafs-smart-400-normal.ttf
+│       ├── kfgqpc-hafs-smart-400-normal.woff2
+│       ├── noto-naskh-arabic-400-normal.woff2
+│       ├── scheherazade-new-arabic-400-normal.ttf
+│       └── scheherazade-new-arabic-400-normal.woff2
+├── src/
+│   ├── main.js
+│   └── style.css
 └── vite.config.js
 ```
 
@@ -58,3 +57,9 @@ npm run build
 - **Terjemahan**: [quran.kemenag.go.id](https://quran.kemenag.go.id) via [quran-kemenag](https://www.npmjs.com/package/quran-kemenag)
 - **Font**: [Scheherazade New](https://software.sil.org/scheherazade/) (SIL Open Font License)
 - **EPUB library**: [epub-gen-memory](https://www.npmjs.com/package/epub-gen-memory)
+
+## Sumber Font
+
+- [KFGQPC](https://github.com/thetruetruth/quran-data-kfgqpc)
+- [Amiri][https://github.com/aliftype/amiri/releases/tag/1.003]
+- [Noto Naskh](https://fonts.google.com/selection?preview.script=Arab&query=Noto+Naskh)
