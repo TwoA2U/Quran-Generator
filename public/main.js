@@ -1,48 +1,46 @@
 /**
- * Al-Quran EPUB Generator — Browser-side
- * Semua berjalan di browser: fetch data JSON lokal → generate EPUB → download
+ * Al-Quran EPUB Generator - Browser-side
+ * Browser flow: fetch AlQuran.cloud API -> generate EPUB -> download
  */
 
 import epub from 'epub-gen-memory/bundle'
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let allSurahs = []          // metadata semua surah dari surah.json
-let selectedNums = new Set() // nomor surah yang dipilih
+let allSurahs = []
+let selectedNums = new Set()
 
-// Juz 30 = surah 78–114
 const JUZ30 = Array.from({ length: 37 }, (_, i) => i + 78)
 
-// ── DOM refs ──────────────────────────────────────────────────────────────────
-const grid         = document.getElementById('surah-grid')
-const searchBox    = document.getElementById('surah-search')
-const countEl      = document.getElementById('selection-count')
-const btnGenerate  = document.getElementById('btn-generate')
-const btnAll       = document.getElementById('btn-select-all')
-const btnJuz30     = document.getElementById('btn-select-juz30')
-const btnClear     = document.getElementById('btn-clear')
-const optTafsir    = document.getElementById('opt-tafsir')
-const optPage      = document.getElementById('opt-page')
-const optFilename  = document.getElementById('opt-filename')
+const grid = document.getElementById('surah-grid')
+const searchBox = document.getElementById('surah-search')
+const countEl = document.getElementById('selection-count')
+const btnGenerate = document.getElementById('btn-generate')
+const btnAll = document.getElementById('btn-select-all')
+const btnJuz30 = document.getElementById('btn-select-juz30')
+const btnClear = document.getElementById('btn-clear')
+const optPage = document.getElementById('opt-page')
+const optFilename = document.getElementById('opt-filename')
+const apiKeyInput = document.getElementById('api-key')
+const editionArabicInput = document.getElementById('edition-arabic')
+const editionLatinInput = document.getElementById('edition-latin')
 const progressCard = document.getElementById('section-progress')
-const progressBar  = document.getElementById('progress-bar')
-const progressPct  = document.getElementById('progress-pct')
+const progressBar = document.getElementById('progress-bar')
+const progressPct = document.getElementById('progress-pct')
 const progressTitle = document.getElementById('progress-title')
 const progressDetail = document.getElementById('progress-detail')
 
-// ── Load surah metadata ───────────────────────────────────────────────────────
 async function loadSurahList() {
   const res = await fetch('./data/surah.json')
   allSurahs = await res.json()
   renderGrid(allSurahs)
 }
 
-// ── Render surah grid ─────────────────────────────────────────────────────────
 function renderGrid(list) {
   grid.innerHTML = ''
   if (list.length === 0) {
     grid.innerHTML = '<p class="loading-surah">Tidak ada surah yang cocok.</p>'
     return
   }
+
   list.forEach(s => {
     const card = document.createElement('div')
     card.className = 'surah-card' + (selectedNums.has(s.surah_id) ? ' selected' : '')
@@ -72,11 +70,10 @@ function updateCount() {
   const n = selectedNums.size
   countEl.textContent = n === 0
     ? 'Belum ada surah dipilih'
-    : `${n} surah dipilih (${[...selectedNums].sort((a,b) => a-b).slice(0,5).join(', ')}${n > 5 ? '...' : ''})`
+    : `${n} surah dipilih (${[...selectedNums].sort((a, b) => a - b).slice(0, 5).join(', ')}${n > 5 ? '...' : ''})`
   btnGenerate.disabled = n === 0
 }
 
-// ── Toolbar buttons ───────────────────────────────────────────────────────────
 btnAll.addEventListener('click', () => {
   selectedNums = new Set(allSurahs.map(s => s.surah_id))
   document.querySelectorAll('.surah-card').forEach(c => c.classList.add('selected'))
@@ -97,7 +94,6 @@ btnClear.addEventListener('click', () => {
   updateCount()
 })
 
-// ── Search ────────────────────────────────────────────────────────────────────
 searchBox.addEventListener('input', () => {
   const q = searchBox.value.toLowerCase().trim()
   const filtered = q
@@ -110,7 +106,6 @@ searchBox.addEventListener('input', () => {
   renderGrid(filtered)
 })
 
-// ── Progress helper ───────────────────────────────────────────────────────────
 function setProgress(pct, title, detail = '') {
   progressCard.style.display = 'block'
   progressBar.style.width = pct + '%'
@@ -119,7 +114,61 @@ function setProgress(pct, title, detail = '') {
   progressDetail.textContent = detail
 }
 
-// ── EPUB CSS (Kindle-friendly, font embedded via URL) ────────────────────────
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function stripHtml(value = '') {
+  const doc = new DOMParser().parseFromString(String(value), 'text/html')
+  return doc.body.textContent || ''
+}
+
+function buildApiUrl(path, apiKey) {
+  const url = new URL(`https://api.alquran.cloud/v1/${path}`)
+  if (apiKey) url.searchParams.set('apikey', apiKey)
+  return url.toString()
+}
+
+async function fetchJson(url) {
+  const res = await fetch(url, { method: 'GET' })
+  if (!res.ok) throw new Error(`API gagal (${res.status}) saat memuat ${url}`)
+
+  const json = await res.json()
+  if (json.code && json.code !== 200) {
+    throw new Error(json.status || `API gagal (${json.code})`)
+  }
+  return json.data
+}
+
+async function fetchSurahFromApi(num, opts) {
+  const editions = `${encodeURIComponent(opts.editionArabic)},${encodeURIComponent(opts.editionLatin)}`
+  const data = await fetchJson(buildApiUrl(`surah/${num}/editions/${editions}`, opts.apiKey))
+  const editionList = Array.isArray(data) ? data : []
+  const arabicEdition = editionList.find(item => item.edition?.identifier === opts.editionArabic) || editionList[0]
+  const latinEdition = editionList.find(item => item.edition?.identifier === opts.editionLatin) || editionList[1]
+
+  if (!arabicEdition?.ayahs?.length) {
+    throw new Error(`Data Arab surah ${num} kosong. Cek edisi "${opts.editionArabic}".`)
+  }
+
+  const latinByAyah = new Map((latinEdition?.ayahs || []).map(ayah => [ayah.numberInSurah, ayah]))
+
+  return arabicEdition.ayahs.map(ayah => {
+    const latin = latinByAyah.get(ayah.numberInSurah)
+    return {
+      ayah_number: ayah.numberInSurah,
+      page_number: ayah.page,
+      script: ayah.text,
+      latin: stripHtml(latin?.text || ''),
+    }
+  })
+}
+
 function buildEpubCss(fontBase64) {
   const fontFace = fontBase64
     ? `@font-face {
@@ -129,95 +178,79 @@ function buildEpubCss(fontBase64) {
     src: url("data:font/woff2;base64,${fontBase64}") format("woff2");
   }`
     : ''
+
   return `
     ${fontFace}
-    body { font-family: serif; margin: 1em; padding: 0; }
-    .surah-header { text-align: center; margin-bottom: 1.5em; padding: 0.8em 0;
+    body { font-family: serif; margin: 1em; padding: 0; color: #000; }
+    .surah-header { text-align: center; margin-bottom: 1.2em; padding: 0.6em 0;
       border-top: 1px solid #000; border-bottom: 1px solid #000; }
     .surah-number { font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 0.3em; }
     .surah-name-arabic { font-family: "Scheherazade New", "Amiri", "Traditional Arabic", serif;
-      font-size: 2.2em; direction: rtl; display: block; margin: 0.2em 0; }
-    .surah-name-latin { font-size: 1.1em; font-weight: bold; display: block; }
+      font-size: 2em; direction: rtl; display: block; margin: 0.2em 0; }
+    .surah-name-latin { font-size: 1.05em; font-weight: bold; display: block; }
     .surah-meta { font-size: 0.8em; display: block; margin-top: 0.3em; }
-    .basmalah { font-family: "Scheherazade New", "Amiri", "Traditional Arabic", serif;
-      font-size: 1.8em; direction: rtl; text-align: center; display: block;
-      margin: 1em 0; padding: 0.5em 0;
-      border-top: 1px solid #999; border-bottom: 1px solid #999; }
-    .ayah-block { margin-bottom: 1.5em; padding-bottom: 1em; border-bottom: 1px solid #ccc; }
+    .ayah-block { margin-bottom: 1.2em; padding-bottom: 0.8em; border-bottom: 1px solid #ccc; }
     .ayah-block:last-child { border-bottom: none; }
     .arabic-text { font-family: "Scheherazade New", "Amiri", "KFGQPC Uthmanic Script Hafs", "Traditional Arabic", serif;
-      font-size: 1.8em; line-height: 2.2; direction: rtl; text-align: right; display: block; margin-bottom: 0.4em; }
-    .translation-line { font-size: 0.82em; line-height: 1.6; color: #333; }
+      font-size: 1.75em; line-height: 2.1; direction: rtl; text-align: right; display: block; margin-bottom: 0.35em; }
+    .latin-line { font-size: 0.85em; line-height: 1.55; color: #222; }
     .ayah-num-inline { font-weight: bold; margin-right: 0.3em; }
-    .page-ref { font-size: 0.85em; color: #666; margin-left: 0.4em; }
-    .tafsir-box { font-size: 0.78em; font-style: italic; color: #555; margin-top: 0.4em;
-      padding-left: 0.5em; border-left: 2px solid #999; }
-    .tafsir-label { font-style: normal; font-weight: bold; display: block; margin-bottom: 0.2em; }
+    .page-ref { font-size: 0.82em; color: #333; margin-left: 0.4em; }
   `
 }
 
-// ── Build single surah chapter HTML ──────────────────────────────────────────
 function buildSurahHtml(surahMeta, verses, opts) {
   const { num, name, nameAr, nameBahasa, revType, verseCount } = surahMeta
-
-  const basmalah = (num !== 1 && num !== 9)
-    ? '<p class="basmalah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>'
-    : ''
 
   const blocks = verses.map(v => {
     const pageHtml = opts.showPage && v.page_number
       ? `<span class="page-ref">(Hal. ${v.page_number})</span>`
       : ''
-    const tafsirHtml = opts.showTafsir && v.tafsir?.short
-      ? `<div class="tafsir-box"><span class="tafsir-label">Tafsir Ringkas</span>${v.tafsir.short}</div>`
-      : ''
+
     return `
       <div class="ayah-block">
-        <p class="arabic-text">${v.verse_arabic} &#x06DD;${v.verse_number}&#x06DD;</p>
-        <p class="translation-line">
-          <span class="ayah-num-inline">${v.verse_number}.</span>${v.verse_bahasa} ${pageHtml}
+        <p class="arabic-text">${escapeHtml(v.script)} &#x06DD;${v.ayah_number}&#x06DD;</p>
+        <p class="latin-line">
+          <span class="ayah-num-inline">${v.ayah_number}.</span>${escapeHtml(v.latin)} ${pageHtml}
         </p>
-        ${tafsirHtml}
       </div>`
   }).join('\n')
 
   return `
     <div class="surah-header">
       <p class="surah-number">Surah ${num}</p>
-      <p class="surah-name-arabic">${nameAr}</p>
-      <p class="surah-name-latin">${name} — ${nameBahasa}</p>
-      <p class="surah-meta">${revType} · ${verseCount} Ayat</p>
+      <p class="surah-name-arabic">${escapeHtml(nameAr)}</p>
+      <p class="surah-name-latin">${escapeHtml(name)} - ${escapeHtml(nameBahasa)}</p>
+      <p class="surah-meta">${revType} - ${verseCount} Ayat</p>
     </div>
-    ${basmalah}
     ${blocks}
   `
 }
 
-// ── Revelation type lookup ────────────────────────────────────────────────────
 const MAKKIYAH = new Set([
-  1,6,7,10,11,12,13,14,15,16,17,18,19,20,21,23,25,26,27,28,29,
-  30,31,32,34,35,36,37,38,39,40,41,42,43,44,45,46,50,51,52,53,
-  54,55,56,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,
-  84,85,86,87,88,89,90,91,92,93,94,95,96,97,100,101,102,103,
-  104,105,106,107,108,109,111,112,113,114
+  1, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 25, 26, 27, 28, 29,
+  30, 31, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 50, 51, 52, 53,
+  54, 55, 56, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83,
+  84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 100, 101, 102, 103,
+  104, 105, 106, 107, 108, 109, 111, 112, 113, 114,
 ])
 
-// ── Main generate function ────────────────────────────────────────────────────
 async function generate() {
   btnGenerate.disabled = true
   btnGenerate.classList.add('loading')
   progressCard.style.display = 'block'
 
   const opts = {
-    showTafsir: optTafsir.checked,
-    showPage:   optPage.checked,
+    showPage: optPage.checked,
+    apiKey: apiKeyInput.value.trim(),
+    editionArabic: editionArabicInput.value.trim() || 'quran-uthmani',
+    editionLatin: editionLatinInput.value.trim() || 'en.transliteration',
   }
-  const filename = (optFilename.value.trim() || 'AlQuran-Kemenag') + '.epub'
+  const filename = (optFilename.value.trim() || 'AlQuran-Kindle') + '.epub'
   const sortedNums = [...selectedNums].sort((a, b) => a - b)
   const total = sortedNums.length
 
   try {
-    // Step 1: Load font
     setProgress(2, 'Memuat font Arab...', 'Scheherazade New')
     let fontBase64 = ''
     try {
@@ -230,18 +263,15 @@ async function generate() {
 
     const css = buildEpubCss(fontBase64)
 
-    // Step 2: Load all verse data
-    setProgress(5, 'Memuat data ayat...', `0 / ${total} surah`)
+    setProgress(5, 'Memuat data dari AlQuran.cloud...', `0 / ${total} surah`)
     const verseDataMap = {}
     for (let i = 0; i < sortedNums.length; i++) {
       const num = sortedNums[i]
-      const res = await fetch(`./data/verses/${num}.json`)
-      verseDataMap[num] = await res.json()
+      verseDataMap[num] = await fetchSurahFromApi(num, opts)
       const pct = 5 + ((i + 1) / total) * 40
-      setProgress(pct, 'Memuat data ayat...', `${i + 1} / ${total} surah dimuat`)
+      setProgress(pct, 'Memuat data dari AlQuran.cloud...', `${i + 1} / ${total} surah dimuat`)
     }
 
-    // Step 3: Build EPUB chapters
     setProgress(50, 'Menyusun konten EPUB...', '')
     const surahMetaMap = Object.fromEntries(allSurahs.map(s => [s.surah_id, s]))
 
@@ -250,10 +280,10 @@ async function generate() {
       const verses = verseDataMap[num]
       const surahMeta = {
         num,
-        name:       meta.surah_name,
-        nameAr:     meta.surah_name_arabic.trim(),
+        name: meta.surah_name,
+        nameAr: meta.surah_name_arabic.trim(),
         nameBahasa: meta.surah_name_bahasa,
-        revType:    MAKKIYAH.has(num) ? 'Makkiyah' : 'Madaniyah',
+        revType: MAKKIYAH.has(num) ? 'Makkiyah' : 'Madaniyah',
         verseCount: meta.surah_verse_count,
       }
       const pct = 50 + ((i + 1) / total) * 25
@@ -265,17 +295,16 @@ async function generate() {
       }
     })
 
-    // Step 4: Generate EPUB
     setProgress(78, 'Membuat file EPUB...', 'Ini mungkin membutuhkan beberapa detik')
 
     const blob = await epub(
       {
-        title:       'Al-Quran Al-Karim — Terjemahan Kemenag RI',
-        author:      'Terjemahan: Kementerian Agama RI',
-        publisher:   'Kementerian Agama Republik Indonesia',
-        description: 'Al-Quran lengkap dengan teks Arab dan terjemahan resmi Kementerian Agama RI.',
-        lang:        'id',
-        tocTitle:    'Daftar Surah',
+        title: 'Al-Quran Al-Karim - Latin Transliteration',
+        author: 'AlQuran.cloud',
+        publisher: 'AlQuran.cloud',
+        description: 'Al-Quran untuk Kindle dengan teks Arab, nomor ayat, nomor halaman mushaf, dan transliterasi latin.',
+        lang: 'id',
+        tocTitle: 'Daftar Surah',
         css,
         numberChaptersInTOC: false,
         prependChapterTitles: false,
@@ -284,7 +313,6 @@ async function generate() {
       chapters
     )
 
-    // Step 5: Trigger download
     setProgress(100, 'Selesai! Mengunduh...', filename)
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -296,13 +324,12 @@ async function generate() {
     setTimeout(() => URL.revokeObjectURL(url), 5000)
 
     setTimeout(() => {
-      progressTitle.textContent = '✓ EPUB berhasil dibuat!'
-      progressDetail.textContent = `${total} surah · ${filename}`
+      progressTitle.textContent = 'EPUB berhasil dibuat!'
+      progressDetail.textContent = `${total} surah - ${filename}`
     }, 500)
-
   } catch (err) {
     console.error(err)
-    setProgress(0, '✗ Gagal membuat EPUB', err.message)
+    setProgress(0, 'Gagal membuat EPUB', err.message)
   } finally {
     btnGenerate.disabled = false
     btnGenerate.classList.remove('loading')
@@ -311,6 +338,5 @@ async function generate() {
 
 btnGenerate.addEventListener('click', generate)
 
-// ── Init ──────────────────────────────────────────────────────────────────────
 loadSurahList()
 updateCount()

@@ -17,7 +17,7 @@
       <div class="logo-mark">&#x06E9;</div>
       <div class="header-text">
         <h1 class="site-title">Al-Quran EPUB Generator</h1>
-        <p class="site-sub">Terjemahan Resmi Kementerian Agama RI</p>
+        <p class="site-sub">Data dari AlQuran.cloud API</p>
       </div>
     </div>
   </header>
@@ -45,13 +45,20 @@
     <section class="card" id="section-options">
       <h2 class="card-title">Opsi</h2>
       <div class="options-grid">
-        <label class="toggle-label">
-          <input type="checkbox" id="opt-tafsir" />
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          <span class="toggle-text">
-            Sertakan Tafsir Ringkas
-            <small>Penjelasan singkat per ayat dari Kemenag</small>
-          </span>
+        <label class="field-label">
+          API key AlQuran.cloud
+          <input class="text-field" type="password" id="api-key" placeholder="Masukkan API key" autocomplete="off" />
+          <small>Dipakai sebagai parameter apikey saat mengambil data.</small>
+        </label>
+        <label class="field-label">
+          Edisi teks Arab
+          <input class="text-field" type="text" id="edition-arabic" value="quran-uthmani" />
+          <small>Contoh: quran-uthmani</small>
+        </label>
+        <label class="field-label">
+          Edisi latin
+          <input class="text-field" type="text" id="edition-latin" value="en.transliteration" />
+          <small>Dipakai untuk transliterasi latin per ayat.</small>
         </label>
         <label class="toggle-label">
           <input type="checkbox" id="opt-page" checked />
@@ -65,7 +72,7 @@
       <div class="filename-row">
         <label class="filename-label" for="opt-filename">Nama file output</label>
         <div class="filename-input-wrap">
-          <input type="text" id="opt-filename" value="AlQuran-Kemenag" />
+          <input type="text" id="opt-filename" value="AlQuran-Kindle" />
           <span class="filename-ext">.epub</span>
         </div>
       </div>
@@ -94,7 +101,7 @@
   </main>
 
   <footer class="site-footer">
-    <p>Data: <a href="https://quran.kemenag.go.id" target="_blank">Kementerian Agama RI</a> &nbsp;·&nbsp;
+    <p>Data: <a href="https://alquran.cloud/api" target="_blank">AlQuran.cloud API</a> &nbsp;·&nbsp;
        Font: <a href="https://software.sil.org/scheherazade/" target="_blank">Scheherazade New (SIL OFL)</a></p>
   </footer>
 
