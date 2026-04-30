@@ -1,0 +1,16 @@
+{
+  "name": "quran-epub-app",
+  "version": "1.0.0",
+  "description": "Al-Quran EPUB Generator — Terjemahan Kemenag RI",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "epub-gen-memory": "^1.0.0"
+  }
+}
