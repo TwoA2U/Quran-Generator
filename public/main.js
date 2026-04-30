@@ -204,7 +204,7 @@ function buildEpubCss(fontBase64) {
 
   return `
     ${fontFace}
-    body { font-family: serif; margin: 1em; padding: 0; color: #000; }
+    body { font-family: serif; margin: 1em; padding: 0; }
     .surah-header { text-align: center; margin-bottom: 1.2em; padding: 0.6em 0;
       border-top: 1px solid #000; border-bottom: 1px solid #000; }
     .surah-number { font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 0.3em; }
@@ -212,34 +212,39 @@ function buildEpubCss(fontBase64) {
       font-size: 2em; direction: rtl; display: block; margin: 0.2em 0; }
     .surah-name-latin { font-size: 1.05em; font-weight: bold; display: block; }
     .surah-meta { font-size: 0.8em; display: block; margin-top: 0.3em; }
+    .basmalah { font-family: "Scheherazade New", "Amiri", "Traditional Arabic", serif;
+      font-size: 1.35em; line-height: 1.8; direction: rtl; text-align: center; margin: 1em 0; }
     .ayah-block { margin-bottom: 1.2em; padding-bottom: 0.8em; border-bottom: 1px solid #ccc; }
     .ayah-block:last-child { border-bottom: none; }
+    .ayah-meta { font-size: 0.78em; line-height: 1.4; font-weight: bold; margin-bottom: 0.35em; }
     .arabic-text { font-family: "Scheherazade New", "Amiri", "KFGQPC Uthmanic Script Hafs", "Traditional Arabic", serif;
-      font-size: 1.75em; line-height: 2.1; direction: rtl; text-align: right; display: block; margin-bottom: 0.35em; }
-    .latin-line { font-size: 0.85em; line-height: 1.55; color: #222; }
-    .translation-line { font-size: 0.85em; line-height: 1.55; color: #222; margin-top: 0.25em; }
-    .ayah-num-inline { font-weight: bold; margin-right: 0.3em; }
-    .page-ref { font-size: 0.82em; color: #333; margin-left: 0.4em; }
+      font-size: 1.55em; line-height: 2; direction: rtl; text-align: right; display: block; margin-bottom: 0.35em; }
+    .latin-line { font-size: 0.85em; line-height: 1.55; }
+    .translation-line { font-size: 0.85em; line-height: 1.55; margin-top: 0.25em; }
   `
 }
 
 function buildSurahHtml(surahMeta, verses, opts) {
   const { num, name, nameAr, nameBahasa, revType, verseCount } = surahMeta
+  const basmalahText = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ'
+  const basmalahHtml = num !== 1 && num !== 9
+    ? `<p class="basmalah">${basmalahText}</p>`
+    : ''
 
   const blocks = verses.map(v => {
-    const pageHtml = opts.showPage && v.page_number
-      ? `<span class="page-ref">(Hal. ${v.page_number})</span>`
-      : ''
+    const pageText = opts.showPage && v.page_number ? ` - Hal. ${v.page_number}` : ''
+    const script = num !== 1 && num !== 9 && v.ayah_number === 1
+      ? v.script.replace(/^﻿?بِسْمِ\s+ٱللَّهِ\s+ٱلرَّحْمَٰنِ\s+ٱلرَّحِيمِ\s*/u, '')
+      : v.script
     const translationHtml = opts.editionTranslation && v.translation
       ? `<p class="translation-line">${escapeHtml(v.translation)}</p>`
       : ''
 
     return `
       <div class="ayah-block">
-        <p class="arabic-text">${escapeHtml(v.script)} &#x06DD;${v.ayah_number}&#x06DD;</p>
-        <p class="latin-line">
-          <span class="ayah-num-inline">${v.ayah_number}.</span>${escapeHtml(v.latin)} ${pageHtml}
-        </p>
+        <p class="ayah-meta">Ayat ${v.ayah_number}${pageText}</p>
+        <p class="arabic-text">${escapeHtml(script)}</p>
+        <p class="latin-line">${escapeHtml(v.latin)}</p>
         ${translationHtml}
       </div>`
   }).join('\n')
@@ -251,6 +256,7 @@ function buildSurahHtml(surahMeta, verses, opts) {
       <p class="surah-name-latin">${escapeHtml(name)} - ${escapeHtml(nameBahasa)}</p>
       <p class="surah-meta">${revType} - ${verseCount} Ayat</p>
     </div>
+    ${basmalahHtml}
     ${blocks}
   `
 }
