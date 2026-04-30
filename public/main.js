@@ -357,10 +357,30 @@ async function generate() {
       const fontRes = await fetch(
         "./fonts/scheherazade-new-arabic-400-normal.woff2",
       );
+      if (!fontRes.ok) {
+        throw new Error(`HTTP ${fontRes.status} - file font tidak ditemukan`);
+      }
       const fontBuf = await fontRes.arrayBuffer();
+      if (fontBuf.byteLength < 1000) {
+        throw new Error(
+          `File font terlalu kecil (${fontBuf.byteLength} bytes), kemungkinan corrupt`,
+        );
+      }
       fontBase64 = btoa(String.fromCharCode(...new Uint8Array(fontBuf)));
+      setProgress(
+        4,
+        "Font Arab berhasil dimuat ✓",
+        `${(fontBuf.byteLength / 1024).toFixed(0)} KB`,
+      );
     } catch (e) {
-      console.warn("Font tidak bisa dimuat, lanjut tanpa embed font:", e);
+      console.error("Font gagal dimuat:", e);
+      setProgress(
+        4,
+        "⚠️ Font Arab gagal dimuat — harakat mungkin tidak tampil di Kindle",
+        `${e.message}. Pastikan file ada di public/fonts/scheherazade-new-arabic-400-normal.woff2`,
+      );
+      // Beri jeda supaya user sempat baca warning sebelum lanjut
+      await new Promise((resolve) => setTimeout(resolve, 2500));
     }
 
     const css = buildEpubCss(fontBase64);
@@ -431,9 +451,7 @@ async function generate() {
             <dc:identifier>goodreads:646462</dc:identifier>
             <dc:identifier>amazon:B0DTR624WB</dc:identifier>
           `,
-        description: `The Quran (English pronunciation: /kɔrˈɑːn/; Arabic: القرآن‎ al-qurʾān, IPA: [qurˈʔaːn], literally meaning "the recitation"), also transliterated Qur'an, Koran, Al-Coran, Coran, Kur'an, and Al-Qur'an, is the central religious text of Islam, which Muslims believe to be the verbatim word of God (Arabic: الله‎, Allah).
-          The Quran is composed of verses (Ayat) that make up 114 chapters (suras) of unequal length which are classified either as Meccan (المكية) or Medinan (المدنية) depending upon the place and time of their claimed revelation. Muslims believe the Quran to be verbally revealed through the angel Jibrīl (Gabriel) from God to Muhammad gradually over a period of approximately 23 years beginning on 22 December 609 CE, when Muhammad was 40, and concluding in 632 CE, the year of his death.
-          Muslims regard the Quran as the main miracle of Muhammad, the proof of his prophethood and the culmination of a series of divine messages that started with the messages revealed to Adam, regarded in Islam as the first prophet, and continued with Suhuf Ibrahim (Scrolls of Abraham), the Tawrat (Torah or Pentateuch) of Moses, the Zabur (Tehillim or Book of Psalms) of David, and the Injil (Gospel) of Jesus. The Quran assumes familiarity with major narratives recounted in Jewish and Christian scriptures, summarizing some, dwelling at length on others and in some cases presenting alternative accounts and interpretations of events. The Quran describes itself as a book of guidance, sometimes offering detailed accounts of specific historical events, and often emphasizing the moral significance of an event over its narrative sequence.`,
+        description: `The Quran (English pronunciation: /kɔrˈɑːn/; Arabic: القرآن‎ al-qurʾān, IPA: [qurˈʔaːn], literally meaning "the recitation"), also transliterated Qur'an, Koran, Al-Coran, Coran, Kur'an, and Al-Qur'an, is the central religious text of Islam, which Muslims believe to be the verbatim word of God (Arabic: الله‎, Allah). `,
         lang: "",
         tocTitle: "Daftar Surah",
         css,
