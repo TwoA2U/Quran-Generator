@@ -4,8 +4,6 @@
  */
 
 import epub from 'epub-gen-memory/bundle'
-
-let allSurahs = []
 const btnGenerate = document.getElementById('btn-generate')
 const optPage = document.getElementById('opt-page')
 const optFilename = document.getElementById('opt-filename')
@@ -21,8 +19,7 @@ const progressDetail = document.getElementById('progress-detail')
 
 async function loadSurahList() {
   const res = await fetch('./data/surah.json')
-  allSurahs = await res.json()
-  btnGenerate.disabled = allSurahs.length === 0
+  return res.json()
 }
 
 function setProgress(pct, title, detail = '') {
@@ -226,11 +223,11 @@ async function generate() {
     editionTranslation: editionTranslationInput.value.trim(),
   }
   const filename = (optFilename.value.trim() || 'AlQuran-Kindle') + '.epub'
-  const sortedNums = allSurahs.map(s => s.surah_id).sort((a, b) => a - b)
+  const sortedNums = Array.from({ length: 114 }, (_, i) => i + 1)
   const total = sortedNums.length
 
   try {
-    if (total === 0) throw new Error('Daftar surah belum dimuat.')
+    const surahs = await loadSurahList()
 
     setProgress(2, 'Memuat font Arab...', 'Scheherazade New')
     let fontBase64 = ''
@@ -254,7 +251,7 @@ async function generate() {
     }
 
     setProgress(50, 'Menyusun konten EPUB...', '')
-    const surahMetaMap = Object.fromEntries(allSurahs.map(s => [s.surah_id, s]))
+    const surahMetaMap = Object.fromEntries(surahs.map(s => [s.surah_id, s]))
 
     const chapters = sortedNums.map((num, i) => {
       const meta = surahMetaMap[num]
@@ -319,4 +316,4 @@ async function generate() {
 
 btnGenerate.addEventListener('click', generate)
 
-Promise.all([loadSurahList(), loadEditionOptions()])
+loadEditionOptions()
