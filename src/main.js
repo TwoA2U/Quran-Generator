@@ -306,7 +306,7 @@ function buildSurahHtml(surahMeta, verses, opts) {
 
       return `
       <div class="ayah-block">
-        <p class="ayah-meta">Ayat ${v.ayah_number}${pageText}</p>
+        <p class="ayah-meta">${escapeHtml(name)} - Ayat ${v.ayah_number}${pageText}</p>
         <p class="arabic-text">${escapeHtml(script)}</p>
         <p class="latin-line">${escapeHtml(v.latin)}</p>
         ${translationHtml}
