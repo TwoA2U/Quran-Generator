@@ -152,6 +152,46 @@ async function fetchSurahFromApi(num, opts) {
   })
 }
 
+async function fetchQuranEdition(edition, apiKey) {
+  if (!edition) return null
+  const data = await fetchJson(buildApiUrl(`quran/${encodeURIComponent(edition)}`, apiKey))
+  if (!data?.surahs?.length) {
+    throw new Error(`Data edisi "${edition}" kosong.`)
+  }
+  return data
+}
+
+function indexSurahsByNumber(quranData) {
+  return new Map((quranData?.surahs || []).map(surah => [surah.number, surah]))
+}
+
+function mergeQuranEditions(arabicData, latinData, translationData) {
+  const latinBySurah = indexSurahsByNumber(latinData)
+  const translationBySurah = indexSurahsByNumber(translationData)
+  const verseDataMap = {}
+
+  arabicData.surahs.forEach(arabicSurah => {
+    const latinByAyah = new Map((latinBySurah.get(arabicSurah.number)?.ayahs || [])
+      .map(ayah => [ayah.numberInSurah, ayah]))
+    const translationByAyah = new Map((translationBySurah.get(arabicSurah.number)?.ayahs || [])
+      .map(ayah => [ayah.numberInSurah, ayah]))
+
+    verseDataMap[arabicSurah.number] = arabicSurah.ayahs.map(ayah => {
+      const latin = latinByAyah.get(ayah.numberInSurah)
+      const translation = translationByAyah.get(ayah.numberInSurah)
+      return {
+        ayah_number: ayah.numberInSurah,
+        page_number: ayah.page,
+        script: ayah.text,
+        latin: stripHtml(latin?.text || ''),
+        translation: stripHtml(translation?.text || ''),
+      }
+    })
+  })
+
+  return verseDataMap
+}
+
 function buildEpubCss(fontBase64) {
   const fontFace = fontBase64
     ? `@font-face {
@@ -254,14 +294,20 @@ async function generate() {
 
     const css = buildEpubCss(fontBase64)
 
-    setProgress(5, 'Memuat data dari AlQuran.cloud...', `0 / ${total} surah`)
-    const verseDataMap = {}
-    for (let i = 0; i < sortedNums.length; i++) {
-      const num = sortedNums[i]
-      verseDataMap[num] = await fetchSurahFromApi(num, opts)
-      const pct = 5 + ((i + 1) / total) * 40
-      setProgress(pct, 'Memuat data dari AlQuran.cloud...', `${i + 1} / ${total} surah dimuat`)
+    setProgress(5, 'Memuat teks Arab...', opts.editionArabic)
+    const arabicData = await fetchQuranEdition(opts.editionArabic, opts.apiKey)
+
+    setProgress(20, 'Memuat transliterasi latin...', opts.editionLatin)
+    const latinData = await fetchQuranEdition(opts.editionLatin, opts.apiKey)
+
+    let translationData = null
+    if (opts.editionTranslation) {
+      setProgress(35, 'Memuat terjemahan...', opts.editionTranslation)
+      translationData = await fetchQuranEdition(opts.editionTranslation, opts.apiKey)
     }
+
+    setProgress(45, 'Menggabungkan data ayat...', '')
+    const verseDataMap = mergeQuranEditions(arabicData, latinData, translationData)
 
     setProgress(50, 'Menyusun konten EPUB...', '')
     const surahMetaMap = Object.fromEntries(surahs.map(s => [s.surah_id, s]))
