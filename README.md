@@ -61,5 +61,5 @@ Quran-Generator/
 ## Sumber Font
 
 - [KFGQPC](https://github.com/thetruetruth/quran-data-kfgqpc)
-- [Amiri][https://github.com/aliftype/amiri/releases/tag/1.003]
+- [Amiri](https://github.com/aliftype/amiri/releases/tag/1.003)
 - [Noto Naskh](https://fonts.google.com/selection?preview.script=Arab&query=Noto+Naskh)
