@@ -2,6 +2,7 @@
  * Al-Quran EPUB Generator - Browser-side
  * Browser flow: fetch AlQuran.cloud API -> generate EPUB -> download
  */
+import JSZip from "jszip"; // Make sure jszip is installed
 
 import epub from "epub-gen-memory/bundle";
 const btnGenerate = document.getElementById("btn-generate");
@@ -471,10 +472,10 @@ async function generate() {
         publisher: "",
         cover:
           "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1275263838i/646462.jpg",
-        customOpfMetadata: `
-            <dc:identifier>goodreads:646462</dc:identifier>
-            <dc:identifier>amazon:B0DTR624WB</dc:identifier>
-          `,
+        // customOpfMetadata: `
+        //     <dc:identifier>goodreads:646462</dc:identifier>
+        //     <dc:identifier>amazon:B0DTR624WB</dc:identifier>
+        //   `,
         description: `The Quran (English pronunciation: /kɔrˈɑːn/; Arabic: القرآن‎ al-qurʾān, IPA: [qurˈʔaːn], literally meaning "the recitation"), also transliterated Qur'an, Koran, Al-Coran, Coran, Kur'an, and Al-Qur'an, is the central religious text of Islam, which Muslims believe to be the verbatim word of God (Arabic: الله‎, Allah). `,
         lang: "",
         tocTitle: "Daftar Surah",
@@ -487,7 +488,32 @@ async function generate() {
     );
 
     setProgress(100, "Selesai! Mengunduh...", filename);
-    const url = URL.createObjectURL(blob);
+
+    // Post Process Epub to include IDs from both amazon and goodreads
+
+    const zip = await JSZip.loadAsync(blob);
+    const opfPath = "OEBPS/content.opf";
+    const opfFile = zip.file(opfPath);
+
+    if (opfFile) {
+      let opfContent = await opfFile.async("string");
+
+      const customIds = `
+        <dc:identifier id="goodreads">goodreads:646462</dc:identifier>
+        <dc:identifier id="amazon">amazon:B0DTR624WB</dc:identifier>
+      </metadata>`;
+
+      opfContent = opfContent.replace("</metadata>", customIds);
+
+      zip.file(opfPath, opfContent);
+    }
+
+    const finalBlob = await zip.generateAsync({
+      type: "blob",
+      mimeType: "application/epub+zip",
+    });
+
+    const url = URL.createObjectURL(finalBlob);
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
