@@ -255,7 +255,7 @@ function buildEpubCss(fontFile, fontFamilyName = "Arabic Font") {
     font-family: "${fontFamilyName}";
     font-weight: 400;
     font-style: normal;
-    src: url(${fontFile}) format("truetype");
+    src: url(fonts/${fontFile}) format("truetype");
   }`;
 
   return `
