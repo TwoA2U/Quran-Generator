@@ -1,14 +1,13 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  root: 'public',
-  base: './',
+  base: "/Quran-Generator/",
   build: {
-    outDir: '../dist',
+    outDir: "../dist",
     emptyOutDir: true,
   },
   // Allows importing epub-gen-memory bundle from node_modules
   optimizeDeps: {
-    include: ['epub-gen-memory']
-  }
-})
+    include: ["epub-gen-memory"],
+  },
+});
