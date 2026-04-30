@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Al-Quran EPUB Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Naskh+Arabic:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="bg-pattern"></div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo-mark">&#x06E9;</div>
+      <div class="header-text">
+        <h1 class="site-title">Al-Quran EPUB Generator</h1>
+        <p class="site-sub">Terjemahan Resmi Kementerian Agama RI</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Surah selector -->
+    <section class="card" id="section-surah">
+      <h2 class="card-title">Pilih Surah</h2>
+      <div class="surah-controls">
+        <div class="btn-group">
+          <button class="btn-outline" id="btn-select-all">Semua Surah</button>
+          <button class="btn-outline" id="btn-select-juz30">Juz 30</button>
+          <button class="btn-outline" id="btn-clear">Kosongkan</button>
+        </div>
+        <input class="search-box" id="surah-search" type="text" placeholder="Cari surah..." />
+      </div>
+      <div class="surah-grid" id="surah-grid">
+        <div class="loading-surah">Memuat daftar surah...</div>
+      </div>
+      <p class="selection-count" id="selection-count">0 surah dipilih</p>
+    </section>
+
+    <!-- Options -->
+    <section class="card" id="section-options">
+      <h2 class="card-title">Opsi</h2>
+      <div class="options-grid">
+        <label class="toggle-label">
+          <input type="checkbox" id="opt-tafsir" />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">
+            Sertakan Tafsir Ringkas
+            <small>Penjelasan singkat per ayat dari Kemenag</small>
+          </span>
+        </label>
+        <label class="toggle-label">
+          <input type="checkbox" id="opt-page" checked />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">
+            Nomor Halaman Mushaf
+            <small>Nomor halaman Mushaf Madinah di setiap ayat</small>
+          </span>
+        </label>
+      </div>
+      <div class="filename-row">
+        <label class="filename-label" for="opt-filename">Nama file output</label>
+        <div class="filename-input-wrap">
+          <input type="text" id="opt-filename" value="AlQuran-Kemenag" />
+          <span class="filename-ext">.epub</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Generate button -->
+    <div class="generate-wrap">
+      <button class="btn-generate" id="btn-generate" disabled>
+        <span class="btn-generate-icon">&#x1F4D6;</span>
+        <span class="btn-generate-text">Generate EPUB</span>
+      </button>
+    </div>
+
+    <!-- Progress -->
+    <section class="card progress-card" id="section-progress" style="display:none">
+      <div class="progress-header">
+        <span class="progress-title" id="progress-title">Mempersiapkan...</span>
+        <span class="progress-pct" id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <p class="progress-detail" id="progress-detail"></p>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Data: <a href="https://quran.kemenag.go.id" target="_blank">Kementerian Agama RI</a> &nbsp;·&nbsp;
+       Font: <a href="https://software.sil.org/scheherazade/" target="_blank">Scheherazade New (SIL OFL)</a></p>
+  </footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
