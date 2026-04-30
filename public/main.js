@@ -18,8 +18,21 @@ const progressTitle = document.getElementById('progress-title')
 const progressDetail = document.getElementById('progress-detail')
 
 async function loadSurahList() {
-  const res = await fetch('./data/surah.json')
-  return res.json()
+  try {
+    const res = await fetch('./data/surah.json')
+    if (!res.ok) throw new Error(`Local surah metadata not found (${res.status})`)
+    return await res.json()
+  } catch (err) {
+    console.warn('Metadata lokal gagal dimuat, pakai metadata API:', err)
+    const apiSurahs = await fetchJson(buildApiUrl('surah', ''))
+    return apiSurahs.map(surah => ({
+      surah_id: surah.number,
+      surah_name: surah.englishName,
+      surah_name_arabic: surah.name,
+      surah_name_bahasa: surah.englishNameTranslation,
+      surah_verse_count: surah.numberOfAyahs,
+    }))
+  }
 }
 
 function setProgress(pct, title, detail = '') {
