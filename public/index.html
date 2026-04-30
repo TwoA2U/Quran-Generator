@@ -24,23 +24,6 @@
 
   <main class="container">
 
-    <!-- Surah selector -->
-    <section class="card" id="section-surah">
-      <h2 class="card-title">Pilih Surah</h2>
-      <div class="surah-controls">
-        <div class="btn-group">
-          <button class="btn-outline" id="btn-select-all">Semua Surah</button>
-          <button class="btn-outline" id="btn-select-juz30">Juz 30</button>
-          <button class="btn-outline" id="btn-clear">Kosongkan</button>
-        </div>
-        <input class="search-box" id="surah-search" type="text" placeholder="Cari surah..." />
-      </div>
-      <div class="surah-grid" id="surah-grid">
-        <div class="loading-surah">Memuat daftar surah...</div>
-      </div>
-      <p class="selection-count" id="selection-count">0 surah dipilih</p>
-    </section>
-
     <!-- Options -->
     <section class="card" id="section-options">
       <h2 class="card-title">Opsi</h2>
@@ -52,12 +35,16 @@
         </label>
         <label class="field-label">
           Edisi teks Arab
-          <input class="text-field" type="text" id="edition-arabic" value="quran-uthmani" />
-          <small>Contoh: quran-uthmani</small>
+          <select class="text-field" id="edition-arabic">
+            <option value="quran-uthmani">quran-uthmani - Uthmani</option>
+          </select>
+          <small>Daftar diambil dari AlQuran.cloud.</small>
         </label>
         <label class="field-label">
           Edisi latin
-          <input class="text-field" type="text" id="edition-latin" value="en.transliteration" />
+          <select class="text-field" id="edition-latin">
+            <option value="en.transliteration">en.transliteration - English Transliteration</option>
+          </select>
           <small>Dipakai untuk transliterasi latin per ayat.</small>
         </label>
         <label class="toggle-label">

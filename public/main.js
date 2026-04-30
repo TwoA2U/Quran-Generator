@@ -6,17 +6,7 @@
 import epub from 'epub-gen-memory/bundle'
 
 let allSurahs = []
-let selectedNums = new Set()
-
-const JUZ30 = Array.from({ length: 37 }, (_, i) => i + 78)
-
-const grid = document.getElementById('surah-grid')
-const searchBox = document.getElementById('surah-search')
-const countEl = document.getElementById('selection-count')
 const btnGenerate = document.getElementById('btn-generate')
-const btnAll = document.getElementById('btn-select-all')
-const btnJuz30 = document.getElementById('btn-select-juz30')
-const btnClear = document.getElementById('btn-clear')
 const optPage = document.getElementById('opt-page')
 const optFilename = document.getElementById('opt-filename')
 const apiKeyInput = document.getElementById('api-key')
@@ -31,80 +21,8 @@ const progressDetail = document.getElementById('progress-detail')
 async function loadSurahList() {
   const res = await fetch('./data/surah.json')
   allSurahs = await res.json()
-  renderGrid(allSurahs)
+  btnGenerate.disabled = allSurahs.length === 0
 }
-
-function renderGrid(list) {
-  grid.innerHTML = ''
-  if (list.length === 0) {
-    grid.innerHTML = '<p class="loading-surah">Tidak ada surah yang cocok.</p>'
-    return
-  }
-
-  list.forEach(s => {
-    const card = document.createElement('div')
-    card.className = 'surah-card' + (selectedNums.has(s.surah_id) ? ' selected' : '')
-    card.dataset.id = s.surah_id
-    card.innerHTML = `
-      <div class="surah-card-num">Surah ${s.surah_id}</div>
-      <span class="surah-card-ar">${s.surah_name_arabic}</span>
-      <div class="surah-card-name">${s.surah_name}</div>
-    `
-    card.addEventListener('click', () => toggleSurah(s.surah_id, card))
-    grid.appendChild(card)
-  })
-}
-
-function toggleSurah(id, el) {
-  if (selectedNums.has(id)) {
-    selectedNums.delete(id)
-    el.classList.remove('selected')
-  } else {
-    selectedNums.add(id)
-    el.classList.add('selected')
-  }
-  updateCount()
-}
-
-function updateCount() {
-  const n = selectedNums.size
-  countEl.textContent = n === 0
-    ? 'Belum ada surah dipilih'
-    : `${n} surah dipilih (${[...selectedNums].sort((a, b) => a - b).slice(0, 5).join(', ')}${n > 5 ? '...' : ''})`
-  btnGenerate.disabled = n === 0
-}
-
-btnAll.addEventListener('click', () => {
-  selectedNums = new Set(allSurahs.map(s => s.surah_id))
-  document.querySelectorAll('.surah-card').forEach(c => c.classList.add('selected'))
-  updateCount()
-})
-
-btnJuz30.addEventListener('click', () => {
-  JUZ30.forEach(id => selectedNums.add(id))
-  document.querySelectorAll('.surah-card').forEach(c => {
-    if (JUZ30.includes(Number(c.dataset.id))) c.classList.add('selected')
-  })
-  updateCount()
-})
-
-btnClear.addEventListener('click', () => {
-  selectedNums.clear()
-  document.querySelectorAll('.surah-card').forEach(c => c.classList.remove('selected'))
-  updateCount()
-})
-
-searchBox.addEventListener('input', () => {
-  const q = searchBox.value.toLowerCase().trim()
-  const filtered = q
-    ? allSurahs.filter(s =>
-        s.surah_name.toLowerCase().includes(q) ||
-        s.surah_name_bahasa.toLowerCase().includes(q) ||
-        String(s.surah_id).includes(q)
-      )
-    : allSurahs
-  renderGrid(filtered)
-})
 
 function setProgress(pct, title, detail = '') {
   progressCard.style.display = 'block'
@@ -132,6 +50,41 @@ function buildApiUrl(path, apiKey) {
   const url = new URL(`https://api.alquran.cloud/v1/${path}`)
   if (apiKey) url.searchParams.set('apikey', apiKey)
   return url.toString()
+}
+
+function renderEditionOptions(selectEl, editions, defaultIdentifier) {
+  selectEl.innerHTML = ''
+  editions.forEach(edition => {
+    const option = document.createElement('option')
+    option.value = edition.identifier
+    option.textContent = `${edition.identifier} - ${edition.englishName || edition.name}`
+    selectEl.appendChild(option)
+  })
+  selectEl.value = editions.some(edition => edition.identifier === defaultIdentifier)
+    ? defaultIdentifier
+    : editions[0]?.identifier || ''
+}
+
+async function loadEditionOptions() {
+  try {
+    const editions = await fetchJson(buildApiUrl('edition?format=text', ''))
+    const arabicEditions = editions.filter(edition =>
+      edition.language === 'ar' && edition.type === 'quran'
+    )
+    const latinEditions = editions.filter(edition =>
+      edition.type === 'transliteration' ||
+      edition.identifier.toLowerCase().includes('transliteration')
+    )
+
+    if (arabicEditions.length) {
+      renderEditionOptions(editionArabicInput, arabicEditions, 'quran-uthmani')
+    }
+    if (latinEditions.length) {
+      renderEditionOptions(editionLatinInput, latinEditions, 'en.transliteration')
+    }
+  } catch (err) {
+    console.warn('Daftar edisi gagal dimuat, pakai opsi bawaan:', err)
+  }
 }
 
 async function fetchJson(url) {
@@ -247,10 +200,12 @@ async function generate() {
     editionLatin: editionLatinInput.value.trim() || 'en.transliteration',
   }
   const filename = (optFilename.value.trim() || 'AlQuran-Kindle') + '.epub'
-  const sortedNums = [...selectedNums].sort((a, b) => a - b)
+  const sortedNums = allSurahs.map(s => s.surah_id).sort((a, b) => a - b)
   const total = sortedNums.length
 
   try {
+    if (total === 0) throw new Error('Daftar surah belum dimuat.')
+
     setProgress(2, 'Memuat font Arab...', 'Scheherazade New')
     let fontBase64 = ''
     try {
@@ -338,5 +293,4 @@ async function generate() {
 
 btnGenerate.addEventListener('click', generate)
 
-loadSurahList()
-updateCount()
+Promise.all([loadSurahList(), loadEditionOptions()])
