@@ -274,7 +274,7 @@ function buildEpubCss(fontFile, fontFamilyName = "Arabic Font") {
     .ayah-block:last-child { border-bottom: none; }
     .ayah-meta { font-size: 0.78em; line-height: 1; font-weight: bold; margin-bottom: 0.35em; }
     .arabic-text { font-family: "${fontFamilyName}", "Scheherazade New", "Traditional Arabic", serif;
-      font-size: 1.7em; line-height: 1.2; direction: rtl; text-align: right; display: block; margin-bottom: 0.35em; }
+      font-size: 2em; line-height: 1.7; direction: rtl; text-align: right; display: block; margin-bottom: 0.35em; }
     .latin-line { font-size: 0.85em; line-height: 1.2; }
     .translation-line { font-size: 0.85em; line-height: 1.2; margin-top: 0.25em; }
   `;
