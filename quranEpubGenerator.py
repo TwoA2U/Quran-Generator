@@ -1,15 +1,12 @@
 import argparse
 import json
-from ast import TryStar
-from gettext import translation
-from tracemalloc import start
+import os
 
 import requests
+from dotenv import load_dotenv
 
 baseUrl = "https://apis.quran.foundation"
-CLIENT_ID = ""
-CLIENT_SECRET = ""
-
+load_dotenv()
 
 QURAN_SCRIPT = [
     "uthmani",
@@ -42,7 +39,7 @@ def getToken(CLIENT_ID, CLIENT_SECRET):
     return response.json()
 
 
-def getTranslation():
+def getTranslationList():
     response = requests.get(f"{baseUrl}/resources/translations")
 
     translationCleaned = []
@@ -56,12 +53,7 @@ def getTranslation():
     return translationCleaned
 
 
-def getQuran(ACCESS_TOKEN, script="uthmani", languageId=20):
-    responseScript = requests.get(
-        baseUrl + f"/content/api/v4/quran/verses/{script}",
-        headers={"x-auth-token": ACCESS_TOKEN, "x-client-id": CLIENT_ID},
-    )
-
+def getTranslation(ACCESS_TOKEN, languageId):
     translationCleaned = {}
 
     for surah in list(range(1, 115)):
@@ -98,33 +90,34 @@ def getQuran(ACCESS_TOKEN, script="uthmani", languageId=20):
                             "text": i.get("text"),
                         }
                     )
+    return translationCleaned
 
+
+def getScript(ACCESS_TOKEN, script="uthmani"):
     qurancleaned = []
+    responseScript = requests.get(
+        baseUrl + f"/content/api/v4/quran/verses/{script}",
+        headers={"x-auth-token": ACCESS_TOKEN, "x-client-id": CLIENT_ID},
+    )
     for i in responseScript.json().get("verses", []):
         surah = i.get("verse_key").split(":")[0]
         ayah = i.get("verse_key").split(":")[1]
-
-        # find the matching translation for this specific ayah
-        surah_translations = translationCleaned.get(int(surah), [])
-        ayah_translation = next(
-            (t for t in surah_translations if str(t.get("ayah_id")) == ayah), None
-        )
 
         qurancleaned.append(
             {
                 "surahId": surah,
                 "ayahId": ayah,
                 "script": i.get(f"text_{script}"),
-                "translation": ayah_translation.get("text")
-                if ayah_translation
-                else None,
             }
         )
     return qurancleaned
 
 
 def main():
-    global CLIENT_ID, CLIENT_SECRET, ACCESS_TOKEN, QURAN_SCRIPT
+    CLIENT_ID = os.getenv("QF_CLIENT_ID")
+    CLIENT_SECRET = os.getenv("QF_CLIENT_SECRET")
+
+    global QURAN_SCRIPT
     parser = argparse.ArgumentParser(description="Quran EPUB Generator")
     parser.add_argument(
         "--client-id", type=str, help="Quran API Client ID", required=False
@@ -143,9 +136,16 @@ def main():
 
     # choosenScript = input("Enter the script you want to use (e.g. uthmani): ")
     for i in QURAN_SCRIPT:
-        quran = getQuran(ACCESS_TOKEN, i)
-        with open("quran.json", "w", encoding="utf-8") as f:
+        quran = getScript(ACCESS_TOKEN, i)
+        with open(f"public/script/{i}.json", "w", encoding="utf-8") as f:
             json.dump(quran, f, ensure_ascii=False, indent=2)
+
+    translationList = getTranslationList()
+
+    for i in translationList:
+        translated = getTranslation(ACCESS_TOKEN, i["id"])
+        with open(f"public/translation/{i['name']}.json", "w", encoding="utf-8") as f:
+            json.dump(translated, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":
