@@ -53,7 +53,7 @@ def getTranslationList():
     return translationCleaned
 
 
-def getTranslation(ACCESS_TOKEN, languageId):
+def getTranslation(ACCESS_TOKEN, CLIENT_ID, languageId):
     translationCleaned = {}
 
     for surah in list(range(1, 115)):
@@ -93,7 +93,7 @@ def getTranslation(ACCESS_TOKEN, languageId):
     return translationCleaned
 
 
-def getScript(ACCESS_TOKEN, script="uthmani"):
+def getScript(ACCESS_TOKEN, CLIENT_ID, script="uthmani"):
     qurancleaned = []
     responseScript = requests.get(
         baseUrl + f"/content/api/v4/quran/verses/{script}",
@@ -136,14 +136,14 @@ def main():
 
     # choosenScript = input("Enter the script you want to use (e.g. uthmani): ")
     for i in QURAN_SCRIPT:
-        quran = getScript(ACCESS_TOKEN, i)
+        quran = getScript(ACCESS_TOKEN, CLIENT_ID, i)
         with open(f"public/script/{i}.json", "w", encoding="utf-8") as f:
             json.dump(quran, f, ensure_ascii=False, indent=2)
 
     translationList = getTranslationList()
 
     for i in translationList:
-        translated = getTranslation(ACCESS_TOKEN, i["id"])
+        translated = getTranslation(ACCESS_TOKEN, CLIENT_ID, i["id"])
         with open(f"public/translation/{i['name']}.json", "w", encoding="utf-8") as f:
             json.dump(translated, f, ensure_ascii=False, indent=2)
 
