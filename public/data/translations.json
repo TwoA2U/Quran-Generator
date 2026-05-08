@@ -18,6 +18,18 @@
     "name": "A. Maududi (Tafhim commentary)"
   },
   {
+    "file": "english-A. Yusuf Ali",
+    "iso": "en",
+    "language": "English",
+    "name": "A. Yusuf Ali"
+  },
+  {
+    "file": "english-Al-Hilali & Khan",
+    "iso": "en",
+    "language": "English",
+    "name": "Al-Hilali & Khan"
+  },
+  {
     "file": "english-Fadel Soliman, Bridges’ translation",
     "iso": "en",
     "language": "English",
@@ -36,10 +48,22 @@
     "name": "M.A.S. Abdel Haleem"
   },
   {
+    "file": "english-Saheeh International",
+    "iso": "en",
+    "language": "English",
+    "name": "Saheeh International"
+  },
+  {
     "file": "english-T. Usmani",
     "iso": "en",
     "language": "English",
     "name": "T. Usmani"
+  },
+  {
+    "file": "english-Transliteration",
+    "iso": "en",
+    "language": "English",
+    "name": "Transliteration"
   },
   {
     "file": "indonesian-Indonesian Islamic Affairs Ministry",
