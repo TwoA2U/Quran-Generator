@@ -221,11 +221,11 @@ function buildEpubCss(fontFile, fontFamilyName = "Arabic Font") {
       font-size: 1.35em; line-height: 1.8; direction: rtl; text-align: center; margin: 1em 0; }
     .ayah-block { margin-bottom: 1.2em; padding-bottom: 0.8em; border-bottom: 1px solid #ccc; }
     .ayah-block:last-child { border-bottom: none; }
-    .ayah-meta { font-size: 0.78em; line-height: 1; font-weight: bold; margin-bottom: 0.35em; }
+    .ayah-meta { font-size: 0.6em; line-height: 1; font-weight: bold;}
     .arabic-text { font-family: "${fontFamilyName}", "Scheherazade New", "Traditional Arabic", serif;
-      font-size: 2em; line-height: 1.4; direction: rtl; text-align: right; display: block; margin-bottom: 0.35em; }
-    .latin-line { font-size: 0.85em; line-height: 1.2; }
-    .translation-line { font-size: 0.85em; line-height: 1.2; margin-top: 0.25em; }
+      font-size: 2em; line-height: 1.4; direction: rtl; margin-bottom: 0.3em; }
+    .latin-line { font-size: 0.85em; line-height: 1.1; }
+    .translation-line { font-size: 0.85em; line-height: 1.1; }
   `;
 }
 
