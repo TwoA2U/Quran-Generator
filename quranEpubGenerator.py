@@ -2,8 +2,8 @@ import argparse
 import json
 import os
 import time
-from turtle import Vec2D
 
+import pycountry as _pycountry
 import requests
 from dotenv import load_dotenv
 
@@ -40,7 +40,6 @@ QURAN_SCRIPT = [
 # The override dict handles the few cases where the API name differs from
 # pycountry's canonical name (e.g. "farsi" vs "Persian").
 
-import pycountry as _pycountry
 
 _LANG_NAME_OVERRIDES = {
     "farsi": "fa",  # pycountry uses "Persian"
