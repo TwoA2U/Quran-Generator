@@ -123,7 +123,10 @@ async function loadTranslationJson(name) {
   const map = new Map();
   for (const [surahId, ayahs] of Object.entries(data)) {
     for (const ayah of ayahs) {
-      map.set(`${surahId}:${ayah.ayah_id}`, stripHtml(ayah.text));
+      map.set(`${surahId}:${ayah.ayah_id}`, {
+        text: stripHtml(ayah.text),
+        page_number: ayah.page_id ?? null,
+      });
     }
   }
   return map;
@@ -151,12 +154,18 @@ function buildVerseDataMap(scriptMap, latinMap, translationMap, surahList) {
 
     for (let ayahNum = 1; ayahNum <= surah.surah_verse_count; ayahNum++) {
       const key = `${surahId}:${ayahNum}`;
+      const translationEntry = translationMap
+        ? (translationMap.get(key) ?? null)
+        : null;
+      const latinEntry = latinMap ? (latinMap.get(key) ?? null) : null;
+
       verses.push({
         ayah_number: ayahNum,
-        page_number: null, // local JSON doesn't carry page numbers
+        page_number:
+          translationEntry?.page_number ?? latinEntry?.page_number ?? null,
         script: scriptMap.get(key) ?? "",
-        latin: latinMap ? (latinMap.get(key) ?? "") : "",
-        translation: translationMap ? (translationMap.get(key) ?? "") : "",
+        latin: latinEntry?.text ?? "",
+        translation: translationEntry?.text ?? "",
       });
     }
 

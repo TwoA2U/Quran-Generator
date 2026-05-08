@@ -192,7 +192,7 @@ def getTranslation(languageId):
         response = safeGet(
             baseUrl
             + f"/content/api/v4/translations/{languageId}/by_chapter/{surah}"
-            + "?page=1&per_page=50&fields=chapter_id,verse_number",
+            + "?page=1&per_page=50&fields=chapter_id,verse_number,page_number",
             headers_extra={},
         )
         data = response.json()
@@ -202,6 +202,7 @@ def getTranslation(languageId):
                 {
                     "surah_id": i.get("chapter_id"),
                     "ayah_id": i.get("verse_number"),
+                    "page_id": i.get("page_number"),
                     "text": i.get("text"),
                 }
             )
@@ -211,7 +212,7 @@ def getTranslation(languageId):
             response = safeGet(
                 baseUrl
                 + f"/content/api/v4/translations/{languageId}/by_chapter/{surah}"
-                + f"?page={page}&per_page=50&fields=chapter_id,verse_number",
+                + f"?page={page}&per_page=50&fields=chapter_id,verse_number,page_number",
                 headers_extra={},
             )
             for i in response.json().get("translations", []):
@@ -219,6 +220,7 @@ def getTranslation(languageId):
                     {
                         "surah_id": i.get("chapter_id"),
                         "ayah_id": i.get("verse_number"),
+                        "page_id": i.get("page_number"),
                         "text": i.get("text"),
                     }
                 )
