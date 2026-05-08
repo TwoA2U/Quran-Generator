@@ -20,7 +20,9 @@
                 <div class="logo-mark">&#x06E9;</div>
                 <div class="header-text">
                     <h1 class="site-title">Al-Quran EPUB Generator</h1>
-                    <p class="site-sub">Data dari AlQuran.cloud API</p>
+                    <p class="site-sub">
+                        Data lokal dari public/script &amp; public/translation
+                    </p>
                 </div>
             </div>
         </header>
@@ -31,50 +33,21 @@
                 <h2 class="card-title">Opsi</h2>
                 <div class="options-grid">
                     <label class="field-label">
-                        API key AlQuran.cloud
-                        <input
-                            class="text-field"
-                            type="password"
-                            id="api-key"
-                            placeholder="Masukkan API key"
-                            autocomplete="off"
-                        />
-                        <small
-                            >Dipakai sebagai parameter apikey saat mengambil
-                            data.</small
-                        >
-                    </label>
-                    <label class="field-label">
-                        Edisi teks Arab
+                        Teks Arab (script)
                         <select class="text-field" id="edition-arabic">
-                            <option value="quran-uthmani">
-                                quran-uthmani - Uthmani
-                            </option>
+                            <!-- populated by JS from AVAILABLE_SCRIPTS -->
                         </select>
-                        <small>Daftar diambil dari AlQuran.cloud.</small>
+                        <small>File dari <code>public/script/</code></small>
                     </label>
                     <label class="field-label">
-                        Edisi latin
-                        <select class="text-field" id="edition-latin">
-                            <option value="en.transliteration">
-                                en.transliteration - English Transliteration
-                            </option>
-                        </select>
-                        <small
-                            >Dipakai untuk transliterasi latin per ayat.</small
-                        >
-                    </label>
-                    <label class="field-label">
-                        Edisi terjemahan
+                        Terjemahan
                         <select class="text-field" id="edition-translation">
-                            <option value="">Tanpa terjemahan</option>
-                            <option value="id.indonesian">
-                                id.indonesian - Bahasa Indonesia
-                            </option>
+                            <!-- populated by JS from AVAILABLE_TRANSLATIONS -->
                         </select>
                         <small
-                            >Boleh dikosongkan jika EPUB hanya perlu Arab dan
-                            latin.</small
+                            >File dari <code>public/translation/</code> —
+                            transliterasi latin selalu disertakan
+                            otomatis.</small
                         >
                     </label>
                     <label class="toggle-label">
@@ -85,8 +58,8 @@
                         <span class="toggle-text">
                             Nomor Halaman Mushaf
                             <small
-                                >Nomor halaman Mushaf Madinah di setiap
-                                ayat</small
+                                >Nomor halaman Mushaf Madinah di setiap ayat
+                                (jika tersedia)</small
                             >
                         </span>
                     </label>
@@ -163,11 +136,7 @@
 
         <footer class="site-footer">
             <p>
-                Data:
-                <a href="https://alquran.cloud/api" target="_blank"
-                    >AlQuran.cloud API</a
-                >
-                &nbsp;·&nbsp; Font:
+                Font:
                 <a href="https://software.sil.org/scheherazade/" target="_blank"
                     >Scheherazade New (SIL OFL)</a
                 >
