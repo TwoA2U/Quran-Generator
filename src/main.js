@@ -306,8 +306,9 @@ async function generate() {
     const FONT_LABELS = {
       "scheherazade-new-arabic-400-normal": "Scheherazade New",
       "amiri-quran-400-normal": "Amiri Quran",
-      "kfgqpc-Uthmanic-Script-hafs-400-normal": "KFGQPC Uthmanic Script HAFS",
-      "kfgqpc-hafs-400-normal": "KFGQPC Hafs",
+      "quran-complex-ver2-arabic-400-normal": "Quran Complex Font Version 2",
+      "kfgqpc-hafs-uthmanic-script-arabic-400-normal":
+        "KFGQPC Uthmanic HAFS Script",
       "kfgqpc-hafs-smart-400-normal": "KFGQPC Hafs Smart",
       "noto-naskh-arabic-400-normal": "Noto Naskh Arabic",
     };

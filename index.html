@@ -37,7 +37,11 @@
                         <select class="text-field" id="edition-arabic">
                             <!-- populated by JS from AVAILABLE_SCRIPTS -->
                         </select>
-                        <small>File dari <code>public/script/</code></small>
+                        <small>
+                            File dari <code>public/script/</code> — rekomendasi:
+                            <strong>qpc_hafs</strong> atau
+                            <strong>uthmani</strong>
+                        </small>
                     </label>
                     <label class="field-label">
                         Terjemahan
@@ -83,7 +87,12 @@
                                 Amiri Quran
                             </option>
                             <option
-                                value="kfgqpc-Uthmanic-Script-hafs-400-normal"
+                                value="quran-complex-ver2-arabic-400-normal"
+                            >
+                                Quran Complex Font Version 2
+                            </option>
+                            <option
+                                value="kfgqpc-hafs-uthmanic-script-arabic-400-normal"
                             >
                                 KFGQPC Uthmanic Script HAFS
                             </option>
@@ -97,9 +106,15 @@
                                 Noto Naskh Arabic
                             </option>
                         </select>
-                        <small
-                            >Font yang digunakan untuk teks Arab di EPUB.</small
-                        >
+                        <small>
+                            Rekomendasi: gunakan
+                            <strong>KFGQPC Uthmanic Script HAFS</strong> dengan
+                            script <strong>qpc_hafs</strong>, atau
+                            <strong>Quran Complex Font Version 2</strong> /
+                            <strong>Scheherazade New</strong> /
+                            <strong>Amiri Quran</strong> dengan script
+                            <strong>uthmani</strong>.
+                        </small>
                     </label>
                 </div>
                 <div class="filename-row">
@@ -146,7 +161,13 @@
 
         <footer class="site-footer">
             <p>
-                Font:
+                Source code:
+                <a
+                    href="https://github.com/TwoA2U/Quran-Generator"
+                    target="_blank"
+                    >github.com/TwoA2U/Quran-Generator</a
+                >
+                &nbsp;·&nbsp; Font:
                 <a href="https://software.sil.org/scheherazade/" target="_blank"
                     >Scheherazade New (SIL OFL)</a
                 >
