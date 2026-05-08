@@ -44,17 +44,26 @@
                         <select class="text-field" id="edition-translation">
                             <!-- populated by JS from AVAILABLE_TRANSLATIONS -->
                         </select>
-                        <small
-                            >File dari <code>public/translation/</code> —
-                            transliterasi latin selalu disertakan
-                            otomatis.</small
-                        >
                     </label>
                     <label class="toggle-label">
-                        <input type="checkbox" id="opt-page" checked />
+                        <input type="checkbox" id="opt-latin" checked />
+
                         <span class="toggle-track"
                             ><span class="toggle-thumb"></span
                         ></span>
+
+                        <span class="toggle-text">
+                            Transliteration
+                            <small>English Transliteration</small>
+                        </span>
+                    </label>
+                    <label class="toggle-label">
+                        <input type="checkbox" id="opt-page" checked />
+
+                        <span class="toggle-track"
+                            ><span class="toggle-thumb"></span
+                        ></span>
+
                         <span class="toggle-text">
                             Nomor Halaman Mushaf
                             <small
@@ -63,6 +72,7 @@
                             >
                         </span>
                     </label>
+
                     <label class="field-label">
                         Font Arab
                         <select class="text-field" id="opt-font">
