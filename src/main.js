@@ -214,16 +214,16 @@ function buildEpubCss(fontFile, fontFamilyName = "Arabic Font") {
       border-top: 1px solid #000; border-bottom: 1px solid #000; }
     .surah-number { font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 0.3em; }
     .surah-name-arabic { font-family: "${fontFamilyName}", "Scheherazade New", "Traditional Arabic", serif;
-      font-size: 2em; direction: rtl; display: block; margin: 0.2em 0; }
+      font-size: 2em; direction: rtl; unicode-bidi: embed; display: block; margin: 0.2em 0; }
     .surah-name-latin { font-size: 1.05em; font-weight: bold; display: block; }
     .surah-meta { font-size: 0.8em; display: block; margin-top: 0.3em; }
     .basmalah { font-family: "${fontFamilyName}", "Scheherazade New", "Traditional Arabic", serif;
-      font-size: 1.35em; line-height: 1.8; direction: rtl; text-align: center; margin: 1em 0; }
+      font-size: 1.35em; line-height: 1.8; direction: rtl; direction: rtl; unicode-bidi: embed; display: block; text-align: center; margin: 1em 0; }
     .ayah-block { margin-bottom: 1.2em; padding-bottom: 0.8em; border-bottom: 1px solid #ccc; }
     .ayah-block:last-child { border-bottom: none; }
     .ayah-meta { font-size: 0.6em; line-height: 1; font-weight: bold;}
     .arabic-text { font-family: "${fontFamilyName}", "Scheherazade New", "Traditional Arabic", serif;
-      font-size: 2em; line-height: 1.4; direction: rtl; margin-bottom: 0.3em; }
+      font-size: 2em; line-height: 1.4; direction: rtl; unicode-bidi: embed; text-align: right; display: block; margin-bottom: 0.3em; }
     .latin-line { font-size: 0.85em; line-height: 1.1; }
     .translation-line { font-size: 0.85em; line-height: 1.1; }
   `;
