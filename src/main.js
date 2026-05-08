@@ -42,6 +42,10 @@ const AVAILABLE_SCRIPTS = [
   "uthmani",
   "uthmani_simple",
   "uthmani_tajweed",
+  "code_v1",
+  "code_v2",
+  "v1",
+  "v2",
 ];
 
 // ── Populate dropdowns ───────────────────────────────────────────────────────
