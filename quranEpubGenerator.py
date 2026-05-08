@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import time
+from turtle import Vec2D
 
 import requests
 from dotenv import load_dotenv
@@ -27,6 +28,10 @@ QURAN_SCRIPT = [
     "text_qpc_hafs",
     "qpc_nastaleeq",
     "text_qpc_nastaleeq",
+    "code_v1",
+    "v1",
+    "code_v2",
+    "v2",
 ]
 
 # ── ISO 639-1 lookup via pycountry ───────────────────────────────────────────
@@ -230,14 +235,14 @@ def getScript(script="uthmani"):
     for i in response.json().get("verses", []):
         surah = i.get("verse_key").split(":")[0]
         ayah = i.get("verse_key").split(":")[1]
+
+        if script not in ("code_v1", "code_v2", "v1", "v2"):
+            cleanscript = script if script.startswith("text_") else f"text_{script}"
+        else:
+            cleanscript = script if script.startswith("code_") else f"code_{script}"
+
         qurancleaned.append(
-            {
-                "surahId": surah,
-                "ayahId": ayah,
-                "script": i.get(script)
-                if script.startswith("text_")
-                else i.get(f"text_{script}"),
-            }
+            {"surahId": surah, "ayahId": ayah, "script": i.get(cleanscript)}
         )
     return qurancleaned
 
